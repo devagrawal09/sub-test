@@ -1,8 +1,11 @@
-const path = require("path");
-const express = require("express");
-const compression = require("compression");
-const morgan = require("morgan");
-const { createRequestHandler } = require("@remix-run/express");
+import path from "path";
+import express from "express";
+import compression from "compression";
+import morgan from "morgan";
+import http from "http";
+import { createRequestHandler } from "@remix-run/express";
+import * as serverBuild from "@remix-run/dev/server-build";
+import { registerSocket } from "~/subscriptions/server";
 
 const BUILD_DIR = path.join(process.cwd(), "build");
 const app = express();
@@ -31,18 +34,21 @@ app.all(
         purgeRequireCache();
 
         return createRequestHandler({
-          build: require(BUILD_DIR),
+          build: serverBuild,
           mode: process.env.NODE_ENV,
         })(req, res, next);
       }
     : createRequestHandler({
-        build: require(BUILD_DIR),
+        build: serverBuild,
         mode: process.env.NODE_ENV,
       })
 );
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = http.createServer(app);
+registerSocket(server);
+
+server.listen(port, () => {
   console.log(`Express server listening on port ${port}`);
 });
 

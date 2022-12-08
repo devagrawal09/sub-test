@@ -1,3 +1,9 @@
+import {
+  useLiveQuery,
+  useSendMessage,
+  SubProvider,
+} from "~/subscriptions/client";
+
 export default function Index() {
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
@@ -27,6 +33,35 @@ export default function Index() {
           </a>
         </li>
       </ul>
+      <SubProvider>
+        <Chat />
+      </SubProvider>
     </div>
   );
 }
+
+const Chat = () => {
+  const messages = useLiveQuery("chatroom");
+  const sendMessage = useSendMessage();
+
+  return (
+    <>
+      <h2>Messages</h2>
+      <ul>
+        {messages?.map((message) => (
+          <li key={message.id}>{message.text}</li>
+        ))}
+      </ul>
+      <input
+        type="text"
+        placeholder="Type a message"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            sendMessage(e.currentTarget.value);
+            e.currentTarget.value = "";
+          }
+        }}
+      />
+    </>
+  );
+};
